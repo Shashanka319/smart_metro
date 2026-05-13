@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="MetroPro — Namma Metro (Bengaluru) demo: 83 stations, route finder, fares, live status, smart card."
+    />
+    <title>MetroPro | Namma Metro (Bengaluru) Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link
+      href="https://api.fontshare.com/v2/css?f[]=geist-sans@400,500,600,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <nav class="mp-public-nav sticky-top">
+      <div class="container py-3 d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <a class="mp-brand" href="index.html">
+          <i data-lucide="train-front" class="icon-lg"></i>
+          MetroPro
+        </a>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <a href="#features" class="btn btn-link btn-sm text-decoration-none text-muted d-none d-sm-inline">Features</a>
+          <button type="button" class="mp-theme-toggle" data-theme-toggle aria-label="Toggle theme">
+            <span data-icon-sun style="display: none"><i data-lucide="sun"></i></span>
+            <span data-icon-moon><i data-lucide="moon"></i></span>
+          </button>
+          <a href="login.html" class="btn mp-btn-outline btn-sm">Log in</a>
+          <a href="signup.html" class="btn mp-btn-primary btn-sm">Sign up</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="mp-hero mp-hero--mesh">
+      <div class="container py-5 mp-land-hero-pad">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-7 mp-land-reveal">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+              <span class="mp-land-pill"><i data-lucide="sparkles" class="icon-sm"></i> Try the full demo free</span>
+              <span class="mp-land-pill mp-land-pill--muted">No install · Runs in your browser</span>
+            </div>
+            <p class="text-uppercase small fw-semibold text-primary mb-2 mp-land-kicker">Urban transit, simplified</p>
+            <h1 class="mb-3 mp-land-headline">Plan routes, watch the network, and pay smarter — in one place</h1>
+            <p class="lead text-muted mb-4 mp-land-lead">
+              MetroPro brings together live-style status, distance-based fares, an animated map, and a digital smart card
+              so riders and ops teams get a <strong class="text-body">single, beautiful hub</strong> — fast on mobile,
+              sharp on desktop.
+            </p>
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+              <a href="signup.html" class="mp-btn-primary">
+                <i data-lucide="rocket" class="icon-sm"></i>
+                Create free account
+              </a>
+              <a href="login.html" class="mp-btn-outline">I already have access</a>
+            </div>
+            <p class="small text-muted mb-4">Average setup: under a minute · Your data stays in this browser (demo mode)</p>
+            <div class="row g-3 pt-1 mp-landing-metrics">
+              <div class="col-4">
+                <div class="mp-metric">
+                  <span class="mp-metric__val" id="mp-m-stations">—</span>
+                  <span class="mp-metric__lab">Network stops</span>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="mp-metric">
+                  <span class="mp-metric__val">11</span>
+                  <span class="mp-metric__lab">Experiences</span>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="mp-metric">
+                  <span class="mp-metric__val">2</span>
+                  <span class="mp-metric__lab">Themes</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5 mp-land-reveal mp-land-reveal--delay">
+            <div class="mp-land-preview-wrap">
+              <div class="mp-land-preview-glow" aria-hidden="true"></div>
+              <div class="mp-land-preview">
+                <div class="mp-land-preview__chrome">
+                  <span></span><span></span><span></span>
+                  <span class="mp-land-preview__title">metropro.app / dashboard</span>
+                </div>
+                <div class="mp-land-preview__body">
+                  <div class="mp-land-preview__row">
+                    <i data-lucide="git-branch" class="text-primary"></i>
+                    <div>
+                      <div class="fw-semibold small">Route Finder</div>
+                      <div class="text-muted" style="font-size: 0.75rem">Swap stations · instant path</div>
+                    </div>
+                    <span class="mp-land-preview__badge text-success">Live</span>
+                  </div>
+                  <div class="mp-land-preview__row">
+                    <i data-lucide="activity" class="text-success"></i>
+                    <div>
+                      <div class="fw-semibold small">Network pulse</div>
+                      <div class="text-muted" style="font-size: 0.75rem">Crowd &amp; headway snapshot</div>
+                    </div>
+                    <span class="mp-land-preview__badge text-warning">Sim</span>
+                  </div>
+                  <div class="mp-land-preview__row mb-0">
+                    <i data-lucide="credit-card" class="text-primary"></i>
+                    <div>
+                      <div class="fw-semibold small">Smart card + QR</div>
+                      <div class="text-muted" style="font-size: 0.75rem">Wallet &amp; trip history</div>
+                    </div>
+                    <span class="mp-land-preview__badge">New</span>
+                  </div>
+                </div>
+                <div class="mp-land-preview__footer">
+                  <a href="signup.html" class="mp-land-preview__link">Open my dashboard <i data-lucide="arrow-right" class="icon-sm"></i></a>
+                </div>
+              </div>
+            </div>
+            <ul class="list-unstyled small text-muted mt-3 mb-0 ps-1">
+              <li class="d-flex align-items-center gap-2 mb-1">
+                <i data-lucide="check" class="text-success icon-sm flex-shrink-0"></i>
+                Protected hub after sign-in · theme &amp; session remembered
+              </li>
+              <li class="d-flex align-items-center gap-2">
+                <i data-lucide="check" class="text-success icon-sm flex-shrink-0"></i>
+                Toast feedback, journey search, and online status in the app
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="mp-land-trust py-4 border-bottom" style="border-color: var(--color-border) !important">
+      <div class="container">
+        <div class="row align-items-center g-4 text-center text-lg-start">
+          <div class="col-lg-3">
+            <p class="small text-uppercase fw-bold text-muted mb-1 mb-lg-0">Why riders stick around</p>
+          </div>
+          <div class="col-lg-9">
+            <div class="d-flex flex-wrap justify-content-center justify-content-lg-start gap-3">
+              <div class="mp-land-stat-chip"><strong class="text-body">Instant</strong> fare &amp; ETA hints</div>
+              <div class="mp-land-stat-chip"><strong class="text-body">One tap</strong> popular routes</div>
+              <div class="mp-land-stat-chip"><strong class="text-body">SVG map</strong> with animated train</div>
+              <div class="mp-land-stat-chip"><strong class="text-body">QR</strong> ticketing preview</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="py-5 mp-land-section-pad">
+      <div class="container">
+        <div class="text-center mb-5" style="max-width: 42rem; margin-left: auto; margin-right: auto">
+          <span class="mp-land-pill mp-land-pill--muted mb-3 d-inline-block">Feature tour</span>
+          <h2 class="h1 mb-3">Built to feel like a real operations product</h2>
+          <p class="text-muted lead mb-0">
+            Every module is interactive — not placeholder screenshots. Sign up once, then explore the full line: routes,
+            fares, status, map, wallet, and history.
+          </p>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6 col-xl-4">
+            <a href="signup.html" class="text-decoration-none mp-land-feature">
+              <div class="mp-land-feature-card h-100">
+                <div class="mp-land-feature-icon"><i data-lucide="git-branch" class="icon-xl text-primary"></i></div>
+                <h3 class="h5 text-body">Route Finder</h3>
+                <p class="text-muted small mb-3">Pick origin &amp; destination, swap with one click, see path, distance, fare, and typical in-vehicle time.</p>
+                <span class="mp-land-feature-link">Include in my account <i data-lucide="chevron-right" class="icon-sm"></i></span>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-xl-4">
+            <a href="signup.html" class="text-decoration-none mp-land-feature">
+              <div class="mp-land-feature-card h-100">
+                <div class="mp-land-feature-icon"><i data-lucide="calculator" class="icon-xl text-primary"></i></div>
+                <h3 class="h5 text-body">Fare Calculator</h3>
+                <p class="text-muted small mb-3">Transparent base + per-km pricing. Log trips straight into history and your digital wallet.</p>
+                <span class="mp-land-feature-link">Include in my account <i data-lucide="chevron-right" class="icon-sm"></i></span>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-xl-4">
+            <a href="signup.html" class="text-decoration-none mp-land-feature">
+              <div class="mp-land-feature-card h-100">
+                <div class="mp-land-feature-icon"><i data-lucide="activity" class="icon-xl text-success"></i></div>
+                <h3 class="h5 text-body">Live Status</h3>
+                <p class="text-muted small mb-3">Simulated crowding, next-train minutes, and line health — refreshes on a cadence like a control room feed.</p>
+                <span class="mp-land-feature-link">Include in my account <i data-lucide="chevron-right" class="icon-sm"></i></span>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-xl-4">
+            <a href="signup.html" class="text-decoration-none mp-land-feature">
+              <div class="mp-land-feature-card h-100">
+                <div class="mp-land-feature-icon"><i data-lucide="map" class="icon-xl text-primary"></i></div>
+                <h3 class="h5 text-body">Live Map</h3>
+                <p class="text-muted small mb-3">Crisp SVG topology with a gold train marker gliding the network — great for demos and storytelling.</p>
+                <span class="mp-land-feature-link">Include in my account <i data-lucide="chevron-right" class="icon-sm"></i></span>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-xl-4">
+            <a href="signup.html" class="text-decoration-none mp-land-feature">
+              <div class="mp-land-feature-card h-100">
+                <div class="mp-land-feature-icon"><i data-lucide="credit-card" class="icon-xl text-primary"></i></div>
+                <h3 class="h5 text-body">Smart Card &amp; QR</h3>
+                <p class="text-muted small mb-3">Premium card UI, quick top-ups, and a scannable code payload — wallet history stays with your session.</p>
+                <span class="mp-land-feature-link">Include in my account <i data-lucide="chevron-right" class="icon-sm"></i></span>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6 col-xl-4">
+            <a href="signup.html" class="text-decoration-none mp-land-feature">
+              <div class="mp-land-feature-card h-100">
+                <div class="mp-land-feature-icon"><i data-lucide="gauge" class="icon-xl text-warning"></i></div>
+                <h3 class="h5 text-body">Fast &amp; responsive</h3>
+                <p class="text-muted small mb-3">Vanilla JS, Bootstrap grid, and WCAG-minded light/dark themes — tuned for phones and wide dashboards.</p>
+                <span class="mp-land-feature-link">Include in my account <i data-lucide="chevron-right" class="icon-sm"></i></span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-5 border-top border-bottom mp-land-steps-bg">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-5">
+            <span class="mp-land-pill mp-land-pill--muted mb-3 d-inline-block">How it works</span>
+            <h2 class="h1 mb-3">Three beats. You are inside.</h2>
+            <p class="text-muted mb-0">No downloads, no API keys for the demo — just a modern browser and a minute of curiosity.</p>
+          </div>
+          <div class="col-lg-7">
+            <ol class="list-unstyled mb-0">
+              <li class="mp-land-step d-flex gap-3 mb-4">
+                <span class="mp-land-step__num">1</span>
+                <div>
+                  <h3 class="h5 mb-1">Create your rider profile</h3>
+                  <p class="text-muted small mb-0">Email check, password strength meter, and a generated smart-card ID — your session persists locally.</p>
+                </div>
+              </li>
+              <li class="mp-land-step d-flex gap-3 mb-4">
+                <span class="mp-land-step__num">2</span>
+                <div>
+                  <h3 class="h5 mb-1">Plan and price a trip</h3>
+                  <p class="text-muted small mb-0">Use Route Finder or Fare Calculator, then log the journey — watch stats and wallet update in real time.</p>
+                </div>
+              </li>
+              <li class="mp-land-step d-flex gap-3">
+                <span class="mp-land-step__num">3</span>
+                <div>
+                  <h3 class="h5 mb-1">Monitor and refine</h3>
+                  <p class="text-muted small mb-0">Glance at Live Status, follow the SVG map, filter history, and toggle themes — built for repeat visits.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-5 mp-land-section-pad">
+      <div class="container">
+        <p class="text-center small text-muted text-uppercase fw-bold mb-2">Voices from the demo</p>
+        <h2 class="h1 text-center mb-5">Designed to impress reviewers <span class="text-muted fs-6 fw-normal">(illustrative)</span></h2>
+        <div class="row g-4 justify-content-center">
+          <div class="col-md-6 col-lg-5">
+            <figure class="mp-land-quote h-100 mb-0">
+              <blockquote class="mb-3">“We used MetroPro in a UX critique — the dashboard density and motion on the map got the room nodding.”</blockquote>
+              <figcaption class="small text-muted mb-0"><strong class="text-body">Aisha K.</strong> · Transit design intern</figcaption>
+            </figure>
+          </div>
+          <div class="col-md-6 col-lg-5">
+            <figure class="mp-land-quote h-100 mb-0">
+              <blockquote class="mb-3">“Finally a student project that feels like a product: toasts, wallet debits, and a coherent purple brand.”</blockquote>
+              <figcaption class="small text-muted mb-0"><strong class="text-body">Marcus T.</strong> · Frontend mentor</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-5 border-top" style="border-color: var(--color-border) !important">
+      <div class="container" style="max-width: 720px">
+        <h2 class="h3 text-center mb-4">Quick answers</h2>
+        <div class="accordion mp-land-faq" id="faqLanding">
+          <div class="accordion-item border-0 mb-2 rounded overflow-hidden" style="border: 1px solid var(--color-border) !important">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">Is this a real backend service?</button>
+            </h3>
+            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqLanding">
+              <div class="accordion-body text-muted small">No — MetroPro is a front-end demonstration. Accounts, trips, and balances live in your browser’s LocalStorage so you can explore safely without servers.</div>
+            </div>
+          </div>
+          <div class="accordion-item border-0 mb-2 rounded overflow-hidden" style="border: 1px solid var(--color-border) !important">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">Can I use it on my phone?</button>
+            </h3>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqLanding">
+              <div class="accordion-body text-muted small">Yes. Layouts use Bootstrap’s fluid grid, collapsible navigation on small screens, and touch-friendly controls.</div>
+            </div>
+          </div>
+          <div class="accordion-item border-0 rounded overflow-hidden" style="border: 1px solid var(--color-border) !important">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">What happens if I clear site data?</button>
+            </h3>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqLanding">
+              <div class="accordion-body text-muted small">Your demo account and history are removed with other stored site data — sign up again anytime.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mp-land-cta-band py-5 mp-land-section-pad text-center text-lg-start">
+      <div class="container">
+        <div class="row align-items-center g-4">
+          <div class="col-lg-8">
+            <h2 class="h1 text-white mb-2">Ready to explore the line?</h2>
+            <p class="text-white mb-0 opacity-75">
+              Join MetroPro in one click — unlock the dashboard, map, smart card, and journey log. Perfect for portfolios,
+              coursework, and stakeholder walkthroughs.
+            </p>
+          </div>
+          <div class="col-lg-4 text-lg-end">
+            <a href="signup.html" class="btn btn-light btn-lg fw-semibold px-4 mb-2 mb-lg-0 d-inline-flex align-items-center gap-2">
+              <i data-lucide="train-front"></i>
+              Start free
+            </a>
+            <div class="mt-2">
+              <a href="login.html" class="link-light small">Already registered? Sign in</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="py-4 text-center text-muted small">
+      <div class="container">MetroPro · Internship demo · <span id="y"></span></div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+      document.getElementById("y").textContent = new Date().getFullYear();
+      var el = document.getElementById("mp-m-stations");
+      if (el && window.MetroProData) el.textContent = String(MetroProData.STATIONS.length);
+      MetroProTheme.init();
+      if (window.MetroProAuth && MetroProAuth.isLoggedIn()) {
+        var navActions = document.querySelector(".mp-public-nav .d-flex.align-items-center.gap-2");
+        var signup = navActions && navActions.querySelector('a[href="signup.html"]');
+        if (navActions && signup) {
+          var dash = document.createElement("a");
+          dash.href = "home.html";
+          dash.className = "btn mp-btn-primary btn-sm";
+          dash.textContent = "Dashboard";
+          navActions.insertBefore(dash, signup);
+        }
+      }
+      lucide.createIcons();
+    </script>
+  </body>
+</html>
