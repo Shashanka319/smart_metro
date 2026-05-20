@@ -925,3 +925,96 @@ a:focus-visible {
   line-height: 1.2;
   border: 1px solid rgba(0, 0, 0, 0.12);
 }
+
+.line-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 600;
+}
+
+.line-pill:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.line-pill.active {
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.line-hero {
+  background: linear-gradient(135deg, rgba(111, 45, 168, 0.08), rgba(0, 166, 80, 0.06));
+  border: 1px solid rgba(111, 45, 168, 0.08);
+}
+
+.mp-line-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.mp-line-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.mp-photo-square img {
+  transition: transform 0.3s ease;
+}
+
+.mp-photo-square img:hover {
+  transform: scale(1.05);
+}
+
+.dash-live-strip {
+  background: linear-gradient(135deg, rgba(111, 45, 168, 0.08), rgba(0, 166, 80, 0.04));
+  border: 1px solid rgba(111, 45, 168, 0.12);
+}
+
+.dash-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.destination-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  min-height: 150px;
+}
+
+.destination-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.destination-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.line-action-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), var(--color-surface));
+}
+
+.mp-card.destination-card,
+.mp-card.line-action-panel,
+.mp-card.dash-live-strip {
+  border-radius: 1.25rem;
+}

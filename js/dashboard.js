@@ -1,170 +1,350 @@
-(function () {
+﻿(function () {
   var WELCOME_KEY = "metropro_welcome_dismissed";
 
-  function setText(id, text) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = text;
+  function el(id) {
+    return document.getElementById(id);
   }
 
   function initWelcome() {
-    var banner = document.getElementById("mp-welcome-banner");
+    var banner = el("mp-welcome-banner");
     if (!banner) return;
     if (localStorage.getItem(WELCOME_KEY) === "1") {
       banner.classList.add("d-none");
       return;
     }
     banner.classList.remove("d-none");
-    var btn = document.getElementById("mp-welcome-dismiss");
-    if (btn) {
-      btn.addEventListener("click", function () {
-        localStorage.setItem(WELCOME_KEY, "1");
-        banner.classList.add("d-none");
-      });
+    var btn = el("mp-welcome-dismiss");
+    if (btn) btn.addEventListener("click", function () {
+      localStorage.setItem(WELCOME_KEY, "1");
+      banner.classList.add("d-none");
+    });
+  }
+
+  var SELECTED_LINE_STORAGE = "metropro_selected_line";
+
+  function getSavedLine() {
+    var saved = localStorage.getItem(SELECTED_LINE_STORAGE);
+    return saved || "Purple";
+  }
+
+  function saveSelectedLine(key) {
+    localStorage.setItem(SELECTED_LINE_STORAGE, key);
+  }
+
+  var selectedLineKey = getSavedLine();
+  var LINE_EXPERIENCE = [
+    {
+      key: "Purple",
+      label: "Purple Line",
+      hex: "#6F2DA8",
+      accent: "#A78BFA",
+      description: "The heart of Bengaluru connecting Majestic, Cubbon Park, and Baiyappanahalli.",
+      stations: ["mahatma_gandhi_road", "cubbon_park", "nayandahalli"],
+    },
+    {
+      key: "Green",
+      label: "Green Line",
+      hex: "#00A650",
+      accent: "#6EE7B7",
+      description: "West-north corridor that serves Yeshwanthpur and the city’s industrial belt.",
+      stations: ["jalahalli", "yeshwanthpur", "nagasandra"],
+    },
+    {
+      key: "Yellow",
+      label: "Yellow Line",
+      hex: "#D4A017",
+      accent: "#FBBF24",
+      description: "Smart link toward Whitefield, BTM Layout, and Bengaluru’s tech campuses.",
+      stations: ["central_silk_board", "baiyappanahalli", "whitefield_kadugodi"],
+    },
+    {
+      key: "Pink",
+      label: "Pink Corridor",
+      hex: "#E11D74",
+      accent: "#F472B6",
+      description: "A next-gen concept line for premium travel experiences across the city.",
+      stations: ["mahatma_gandhi_road", "indiranagar", "whitefield_kadugodi"],
+    },
+  ];
+
+  var TOP_STATIONS = [
+    { id: "cubbon_park", title: "Cubbon Park", subtitle: "Garden gateway to central Bengaluru" },
+    { id: "baiyappanahalli", title: "Baiyappanahalli", subtitle: "Tech corridor access point" },
+    { id: "nadaprabhu_kempegowda_majestic", title: "Majestic", subtitle: "City’s busiest interchange hub" },
+    { id: "lalbagh", title: "Lalbagh", subtitle: "Green escape near the market" },
+  ];
+
+  var LIVE_STATUS = [
+    { line: "Purple", status: "Smooth", detail: "Central stations running on time" },
+    { line: "Green", status: "Busy", detail: "Yeshwanthpur corridor peak flow" },
+    { line: "Yellow", status: "Steady", detail: "IT stretch moving well" },
+  ];
+
+  function getLineByKey(key) {
+    return LINE_EXPERIENCE.find(function (line) {
+      return line.key === key;
+    }) || LINE_EXPERIENCE[0];
+  }
+
+  function getStationById(id) {
+    return (window.MetroProData && MetroProData.STATIONS || []).find(function (station) {
+      return station.id === id;
+    }) || { id: id, name: id.replace(/_/g, " "), line: "Unknown" };
+  }
+
+  function getLineRoute(line) {
+    switch (line.key) {
+      case "Purple":
+        return { from: "mahatma_gandhi_road", to: "cubbon_park" };
+      case "Green":
+        return { from: "jalahalli", to: "yeshwanthpur" };
+      case "Yellow":
+        return { from: "central_silk_board", to: "baiyappanahalli" };
+      case "Pink":
+        return { from: "mahatma_gandhi_road", to: "whitefield_kadugodi" };
+      default:
+        return { from: "mahatma_gandhi_road", to: "baiyappanahalli" };
     }
   }
 
-  function initStats() {
-    if (!document.getElementById("mp-dash-stats")) return;
-    var s = MetroProJourney.getJourneyStats();
-    var bal = MetroProJourney.getWalletBalance();
-    setText("mp-stat-trips", String(s.tripCount));
-    setText("mp-stat-km", s.totalKm > 0 ? s.totalKm + " km" : "—");
-    setText("mp-stat-spent", s.totalFare > 0 ? "₹" + s.totalFare : "—");
-    setText("mp-stat-wallet", "₹" + bal);
-    var lastEl = document.getElementById("mp-stat-last");
-    if (lastEl) {
-      if (s.lastTrip) {
-        lastEl.textContent = "Last: " + (s.lastTrip.from || "") + " → " + (s.lastTrip.to || "");
-      } else {
-        lastEl.textContent = "Log a trip from Route Finder or Fare Calculator.";
-      }
-    }
+  function formatCurrency(amount) {
+    return amount === 0 ? "₹0" : "₹" + amount.toFixed(0);
   }
 
-  function refreshLiveStrip() {
-    var strip = document.getElementById("mp-dash-live-strip");
-    if (!strip || !window.MetroProDynamic) return;
-    strip.innerHTML =
-      '<div class="mp-card py-3 px-3 mb-0"><p class="small text-muted mb-0">Loading live Bengaluru context…</p></div>';
-    MetroProDynamic.ensureWeather()
-      .finally(function () {
-        MetroProDynamic.renderDashboardStrip(strip);
-      });
+  function buildButtonLinePicker(line) {
+    var active = selectedLineKey === line.key;
+    return (
+      '<button type="button" class="line-pill ' + (active ? "active" : "") + '" data-line-select="' + line.key + '" style="border-color:' + line.hex + '; color:' + (active ? "#fff" : line.hex) + '; background:' + (active ? line.hex : "rgba(255,255,255,0.06)") + ';">' +
+      '<span>' + line.label + '</span>' +
+      '</button>'
+    );
   }
 
-  function refreshAiCoach() {
-    var host = document.getElementById("mp-dash-ai-coach");
-    if (!host || !window.MetroProAI) return;
-    host.classList.remove("d-none");
-    host.innerHTML =
-      '<div class="mp-card py-3 px-3 mb-0"><p class="small text-muted mb-0">Preparing your dashboard tips…</p></div>';
-    var stats = MetroProJourney.getJourneyStats();
-    var wallet = MetroProJourney.getWalletBalance();
-    var wChain =
-      window.MetroProDynamic && MetroProDynamic.ensureWeather
-        ? MetroProDynamic.ensureWeather().catch(function () {
-            return null;
-          })
-        : Promise.resolve(null);
-    wChain
-      .then(function () {
-        return MetroProAI.fetchDashboardCoach(stats, wallet);
-      })
-      .then(function (text) {
-        host.innerHTML =
-          '<div class="mp-card py-3 px-3 mb-0">' +
-          '<div class="d-flex gap-3 align-items-start">' +
-          '<span class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:44px;height:44px;background:var(--color-primary-muted)">' +
-          '<i data-lucide="bot" class="text-primary"></i></span>' +
-          '<div class="min-w-0 flex-grow-1">' +
-          '<p class="small text-uppercase fw-bold text-muted mb-1">Smart coach</p>' +
-          '<p class="small text-muted mb-2">Your trips + Open-Meteo weather.</p>' +
-          '<div class="small mp-dash-ai-prose" style="white-space:pre-wrap"></div>' +
-          "</div></div></div>";
-        var prose = host.querySelector(".mp-dash-ai-prose");
-        renderFavorites();
-        if (prose) prose.textContent = text || "—";
-        if (window.lucide && lucide.createIcons) lucide.createIcons();
-      });
+  function heroHtml(line, userName) {
+    var route = getLineRoute(line);
+    return (
+      '<div class="mp-card line-hero p-4 mb-3">' +
+      '<div class="row g-3 align-items-center">' +
+      '<div class="col-lg-8">' +
+      '<div class="small text-uppercase fw-semibold text-muted mb-2">Namma Metro command center</div>' +
+      '<h2 class="mb-3" style="color:' + line.hex + '">Discover Bengaluru on the ' + line.label + '</h2>' +
+      '<p class="text-muted mb-3">' + line.description + ' Explore curated routes, station stories, and a live pulse of the network.</p>' +
+      '<div class="d-flex flex-wrap gap-2 mb-3">' +
+      '<a href="route-finder.html#route=' + encodeURIComponent(route.from) + ',' + encodeURIComponent(route.to) + '" class="btn btn-lg" style="background:' + line.hex + '; color:#fff;">Start journey</a>' +
+      '<a href="live-status.html#' + line.key.toLowerCase() + '" class="btn btn-lg btn-outline-secondary">Line status</a>' +
+      '</div>' +
+      '<div class="small text-muted">Welcome back, ' + (userName || "Rider") + '. Your dashboard is now tuned to Bangalore’s metro vibe.</div>' +
+      '</div>' +
+      '<div class="col-lg-4 d-none d-lg-block">' +
+      '<div class="line-hero-image" style="background:radial-gradient(circle at top left, rgba(255,255,255,0.45), transparent 40%), linear-gradient(135deg, ' + line.accent + ' 0%, ' + line.hex + ' 100%); height:260px; border-radius:1rem; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);"></div>' +
+      '</div>' +
+      '</div>' +
+      '</div>'
+    );
   }
 
-  function renderFavorites() {
-    var host = document.getElementById("mp-fav-routes");
+  function renderHero() {
+    var host = el("mp-dash-ai-coach");
     if (!host) return;
-    try {
-      var arr = JSON.parse(localStorage.getItem("metropro_fav_routes") || "[]");
-      if (!arr || !arr.length) {
-        host.innerHTML = '<div class="mp-card"><h3 class="h6 mb-2">Favorites</h3><p class="small text-muted mb-0">Save frequent routes in Route Finder to see quick-access buttons here.</p></div>';
-        return;
-      }
-      host.innerHTML = '<div class="mp-card"><h3 class="h6 mb-2">Favorite routes</h3><div class="d-flex flex-wrap gap-2" id="mp-fav-list"></div></div>';
-      var list = document.getElementById("mp-fav-list");
-      arr.slice(0, 8).forEach(function (f) {
-        var label = f.label || (f.fromName && f.toName ? f.fromName + ' → ' + f.toName : f.from + ' → ' + f.to);
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn btn-sm btn-outline-primary';
-        btn.textContent = label;
-        btn.addEventListener('click', function () {
-          // navigate to route-finder with fragment
-          location.href = 'route-finder.html#route=' + encodeURIComponent(f.from) + ',' + encodeURIComponent(f.to);
-        });
-        list.appendChild(btn);
-      });
-    } catch (e) {
-      host.innerHTML = '';
-    }
+    var user = window.MetroProAuth && MetroProAuth.getCurrentUser ? MetroProAuth.getCurrentUser() : null;
+    host.classList.remove("d-none");
+    host.innerHTML = heroHtml(getLineByKey(selectedLineKey), user && user.name ? user.name : "Guest");
+    if (window.lucide && lucide.createIcons) lucide.createIcons();
+  }
+
+  function renderLiveStrip() {
+    var host = el("mp-dash-live-strip");
+    if (!host) return;
+    host.innerHTML =
+      '<div class="mp-card p-3 mb-4 dash-live-strip">' +
+      '<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">' +
+      '<div>' +
+      '<div class="small text-uppercase fw-semibold text-muted">Live pulse</div>' +
+      '<div class="h5 mb-1">Bengaluru metro at a glance</div>' +
+      '<p class="small text-muted mb-0">Fresh line status, latest destinations, and your day’s ride summary in one view.</p>' +
+      '</div>' +
+      '<div class="d-flex flex-wrap gap-2">' +
+      LIVE_STATUS.map(function (item) {
+        var line = getLineByKey(item.line);
+        return (
+          '<span class="dash-status-pill" style="border-color:' + line.hex + '; color:' + line.hex + '; background:' + line.hex + '15;">' +
+          '<strong>' + item.line + '</strong> · ' + item.status +
+          '</span>'
+        );
+      }).join("") +
+      '</div>' +
+      '</div>' +
+      '</div>';
   }
 
   function renderTopDestinations() {
-    var host = document.getElementById("mp-top-destinations");
+    var host = el("mp-top-destinations");
     if (!host) return;
-    var journeys = MetroProJourney.getJourneys();
-    if (!journeys.length) {
-      host.innerHTML = '<div class="mp-card"><h3 class="h6 mb-2">Suggested destinations</h3><p class="small text-muted mb-0">Log trips first to get destination suggestions.</p></div>';
-      return;
+    host.innerHTML =
+      '<div class="mp-card p-4 mb-4">' +
+      '<div class="d-flex align-items-center justify-content-between mb-3">' +
+      '<div><h3 class="h6 mb-1">Trending Bengaluru stops</h3><p class="small text-muted mb-0">Popular destinations for your next metro ride.</p></div>' +
+      '<a href="route-finder.html" class="small text-decoration-none">See more routes →</a>' +
+      '</div>' +
+      '<div class="row g-3">' +
+      TOP_STATIONS.map(function (item) {
+        var station = getStationById(item.id);
+        var lineTokens = window.MetroProData && MetroProData.stationLineTokens ? MetroProData.stationLineTokens(station).join(' · ') : station.line;
+        return (
+          '<div class="col-md-6 col-xl-3">' +
+          '<a href="route-finder.html#route=' + encodeURIComponent(item.id) + ',baiyappanahalli" class="text-decoration-none">' +
+          '<div class="mp-card destination-card h-100 p-3">' +
+          '<div class="d-flex align-items-center justify-content-between mb-3">' +
+          '<div><h4 class="h6 mb-1">' + item.title + '</h4><p class="small text-muted mb-0">' + item.subtitle + '</p></div>' +
+          '<span class="destination-badge">' + lineTokens + '</span>' +
+          '</div>' +
+          '<div class="small text-muted">Quick plan from your dashboard and explore this stop on the live map.</div>' +
+          '</div>' +
+          '</a>' +
+          '</div>'
+        );
+      }).join('') +
+      '</div>' +
+      '</div>';
+  }
+
+  function renderJourneyStats() {
+    if (!window.MetroProJourney) return;
+    var stats = MetroProJourney.getJourneyStats();
+    var wallet = MetroProJourney.getWalletBalance();
+    var tripCount = el("mp-stat-trips");
+    var kmCount = el("mp-stat-km");
+    var spentCount = el("mp-stat-spent");
+    var walletCount = el("mp-stat-wallet");
+    var last = el("mp-stat-last");
+    if (tripCount) tripCount.textContent = stats.tripCount;
+    if (kmCount) kmCount.textContent = stats.totalKm ? stats.totalKm + " km" : "—";
+    if (spentCount) spentCount.textContent = stats.totalFare ? formatCurrency(stats.totalFare) : "—";
+    if (walletCount) walletCount.textContent = formatCurrency(wallet);
+    if (last) {
+      last.textContent = stats.lastTrip
+        ? "Last logged ride: " + getStationById(stats.lastTrip.from).name + " → " + getStationById(stats.lastTrip.to).name
+        : "Start your first ride from Route Finder to populate the dashboard.";
     }
-    var counts = {};
-    journeys.forEach(function (journey) {
-      if (!journey.to) return;
-      counts[journey.to] = (counts[journey.to] || 0) + 1;
-    });
-    var top = Object.keys(counts)
-      .sort(function (a, b) {
-        return counts[b] - counts[a];
-      })
-      .slice(0, 3);
-    if (!top.length) {
-      host.innerHTML = '<div class="mp-card"><h3 class="h6 mb-2">Suggested destinations</h3><p class="small text-muted mb-0">Add journeys to unlock personalized suggestions.</p></div>';
-      return;
-    }
-    var lastOrigin = journeys[0] && journeys[0].from ? journeys[0].from : (MetroProData.STATIONS[0] && MetroProData.STATIONS[0].id);
-    host.innerHTML = '<div class="mp-card"><h3 class="h6 mb-2">Suggested destinations</h3><div class="d-flex flex-wrap gap-2" id="mp-top-dest-list"></div></div>';
-    var list = document.getElementById("mp-top-dest-list");
-    top.forEach(function (stationId) {
-      var station = MetroProData.STATIONS.find(function (s) {
-        return s.id === stationId;
+  }
+
+  function renderLineActions() {
+    var host = el("mp-fav-routes");
+    if (!host) return;
+    var line = getLineByKey(selectedLineKey);
+    var route = getLineRoute(line);
+    host.innerHTML =
+      '<div class="mp-card p-4 mb-4 line-action-panel" style="border-left:4px solid ' + line.hex + ';">' +
+      '<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">' +
+      '<div>' +
+      '<div class="small text-muted">Selected line</div>' +
+      '<div class="h5 mb-1" style="color:' + line.hex + '">' + line.label + '</div>' +
+      '<div class="small text-muted">Actions tailored to this line and your Bangalore commute.</div>' +
+      '</div>' +
+      '<div class="d-flex flex-wrap gap-2">' +
+      '<a href="route-finder.html#route=' + encodeURIComponent(route.from) + ',' + encodeURIComponent(route.to) + '" class="btn btn-primary">Plan route</a>' +
+      '<a href="live-status.html#' + line.key.toLowerCase() + '" class="btn btn-outline-secondary">Line status</a>' +
+      '<a href="fare-calculator.html" class="btn btn-outline-success">Fare estimate</a>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
+  }
+
+  function stationCardHtml(station, line) {
+    var stationImage = 'assets/metro-photos/' + station.id + '.svg';
+    var fallback = 'https://source.unsplash.com/featured/640x360/?' + encodeURIComponent(station.name + ' bangalore metro');
+    var tags = window.MetroProData && MetroProData.stationLineTokens ? MetroProData.stationLineTokens(station).join(' · ') : station.line;
+    return (
+      '<div class="col-lg-4 col-sm-6">' +
+      '<div class="mp-card mp-line-card h-100 p-0 overflow-hidden" style="border-top:4px solid ' + line.hex + ';">' +
+      '<div class="ratio ratio-16x9" style="background:' + line.hex + '20;">' +
+      '<img src="' + stationImage + '" onerror="this.onerror=null;this.src=\'' + fallback + '\'" alt="' + station.name + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;"/>' +
+      '</div>' +
+      '<div class="p-3">' +
+      '<h4 class="h6 mb-1">' + station.name + '</h4>' +
+      '<p class="small text-muted mb-2">' + tags + '</p>' +
+      '<div class="d-flex flex-wrap gap-2">' +
+      '<a href="route-finder.html#route=' + encodeURIComponent(station.id) + ',baiyappanahalli" class="btn btn-sm btn-outline-primary">Plan from here</a>' +
+      '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="alert(\'Nearby highlights for ' + station.name.replace(/'/g, "\\'") + '\')">Nearby</button>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderLineExplorer() {
+    var host = el("mp-dash-station-highlights");
+    if (!host) return;
+    var line = getLineByKey(selectedLineKey);
+    host.innerHTML =
+      '<div class="mp-card p-4 mb-4">' +
+      '<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">' +
+      '<div><h3 class="h6 mb-1">Line showcase</h3><p class="small text-muted mb-0">Dive into station stories crafted for each line.</p></div>' +
+      '<div class="d-flex flex-wrap gap-2">' +
+      LINE_EXPERIENCE.map(buildButtonLinePicker).join("") +
+      '</div>' +
+      '</div>' +
+      '<div class="row g-3">' +
+      line.stations.map(function (stationId) {
+        var station = getStationById(stationId);
+        return station ? stationCardHtml(station, line) : "";
+      }).join("") +
+      '</div>' +
+      '</div>';
+    if (window.lucide && lucide.createIcons) lucide.createIcons();
+    host.querySelectorAll('[data-line-select]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        selectedLineKey = this.dataset.lineSelect;
+        saveSelectedLine(selectedLineKey);
+        renderAll();
       });
-      var label = station ? station.name : stationId;
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn btn-sm btn-outline-success';
-      btn.textContent = 'To ' + label;
-      btn.title = 'Quick route from the last origin';
-      btn.addEventListener('click', function () {
-        location.href = 'route-finder.html#route=' + encodeURIComponent(lastOrigin) + ',' + encodeURIComponent(stationId);
-      });
-      list.appendChild(btn);
     });
   }
 
-  function init() {
+  function renderPhotoGallery() {
+    var host = el("mp-dash-metro-photos");
+    if (!host) return;
+    var line = getLineByKey(selectedLineKey);
+    var stations = line.stations.map(function (stationId) {
+      return getStationById(stationId);
+    }).filter(Boolean);
+    host.innerHTML =
+      '<div class="mp-card p-4 mb-4">' +
+      '<div class="d-flex align-items-center justify-content-between mb-3">' +
+      '<div><h3 class="h6 mb-1">' + line.label + ' photo story</h3><p class="small text-muted mb-0">Visual highlights from Bengaluru’s busiest metro stops.</p></div>' +
+      '<span class="badge rounded-pill text-white" style="background:' + line.hex + '">' + stations.length + ' stops</span>' +
+      '</div>' +
+      '<div class="row g-2 photo-grid">' +
+      stations.concat(stations.slice(0, 3)).slice(0, 6).map(function (station) {
+        var local = 'assets/metro-photos/' + station.id + '.svg';
+        var unsplash = 'https://source.unsplash.com/featured/400x260/?' + encodeURIComponent(station.name + ' metro');
+        return (
+          '<div class="col-6 col-md-4">' +
+          '<div class="mp-photo-square rounded-3 overflow-hidden" style="background:' + line.hex + '10">' +
+          '<img src="' + local + '" onerror="this.onerror=null;this.src=\'' + unsplash + '\'" alt="' + station.name + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;"/>' +
+          '</div>' +
+          '<div class="small mt-2 text-truncate">' + station.name + '</div>' +
+          '</div>'
+        );
+      }).join("") +
+      '</div>' +
+      '</div>';
+  }
+
+  function renderAll() {
     initWelcome();
-    initStats();
-    refreshLiveStrip();
-    renderFavorites();
+    renderHero();
+    renderLiveStrip();
+    renderLineActions();
     renderTopDestinations();
-    refreshAiCoach();
+    renderLineExplorer();
+    renderPhotoGallery();
+    renderJourneyStats();
+  }
+
+  function init() {
+    renderAll();
   }
 
   if (document.readyState === "loading") {
