@@ -80,6 +80,7 @@
       initMobileSidebar();
       initUserChip();
       initOnlineBadge();
+      if (window.SmartMetroBrand) SmartMetroBrand.apply();
     },
   };
 

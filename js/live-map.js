@@ -1,128 +1,275 @@
 (function () {
-  /** Stylised Namma Metro schematic (not to scale). */
-  var MAP_PATH = [
-    [72, 88],
-    [210, 195],
-    [355, 115],
-    [385, 260],
-    [228, 348],
-    [95, 228],
-  ];
+  var VB_W = 760;
+  var VB_H = 520;
+  var LINE_COLORS = { Purple: "#6F2DA8", Green: "#00A650", Yellow: "#D4A017" };
+  var activeLine = "all";
+  var statusById = {};
+  var refreshTimer = null;
 
-  var STOPS = [
-    { x: 72, y: 88, label: "MDV", title: "Madavara" },
-    { x: 210, y: 195, label: "Maj", title: "Majestic" },
-    { x: 355, y: 115, label: "WF", title: "Whitefield" },
-    { x: 385, y: 260, label: "BOM", title: "Bommasandra" },
-    { x: 228, y: 348, label: "SIL", title: "Silk Institute" },
-    { x: 95, y: 228, label: "CLG", title: "Challaghatta" },
-  ];
+  function layAlong(rows, p0, p1) {
+    var out = {};
+    var n = rows.length;
+    if (n < 1) return out;
+    for (var i = 0; i < n; i++) {
+      var id = rows[i][0];
+      var t = n === 1 ? 0.5 : i / (n - 1);
+      out[id] = [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t];
+    }
+    return out;
+  }
 
-  function buildSvg() {
+  function buildCoords() {
+    var D = window.MetroProData;
+    if (!D || !D.LINES) return {};
+    var coords = {};
+    function merge(map) {
+      Object.keys(map).forEach(function (id) {
+        if (!coords[id]) coords[id] = map[id];
+      });
+    }
+    merge(layAlong(D.LINES.purple, [48, 268], [712, 108]));
+    merge(layAlong(D.LINES.green, [358, 36], [358, 488]));
+    merge(layAlong(D.LINES.yellow, [368, 402], [708, 468]));
+    return coords;
+  }
+
+  function polylinePoints(lineRows, coords) {
+    var pts = [];
+    for (var i = 0; i < lineRows.length; i++) {
+      var c = coords[lineRows[i][0]];
+      if (c) pts.push(c[0].toFixed(1) + "," + c[1].toFixed(1));
+    }
+    return pts.join(" ");
+  }
+
+  function refreshStatusCache() {
+    if (!window.MetroProDynamic || !window.MetroProData) return;
+    var w = MetroProDynamic.getCachedWeather();
+    var rows = MetroProDynamic.buildLiveRows(MetroProData.STATIONS, w);
+    statusById = {};
+    rows.forEach(function (r) {
+      if (r.station && r.station.id) statusById[r.station.id] = r;
+    });
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;");
+  }
+
+  function showStationPanel(st) {
+    var panel = document.getElementById("mp-map-station-panel");
+    if (!panel || !st) return;
+    var row = statusById[st.id];
+    var lines = MetroProData.stationLineTokens(st).join(", ") || st.line;
+    panel.classList.remove("d-none");
+    panel.innerHTML =
+      "<h3 class=\"h6 mb-2\">" +
+      esc(st.name) +
+      "</h3>" +
+      '<p class="small text-muted mb-1">Code: <strong>' +
+      esc(st.code || "—") +
+      "</strong> · Lines: " +
+      esc(lines) +
+      "</p>" +
+      (row
+        ? '<p class="small mb-1">Next train: <strong>' +
+          row.nextTrainMin +
+          " min</strong> · Crowd: " +
+          esc(row.crowd) +
+          "</p><p class=\"small mb-0 " +
+          (row.status.indexOf("delay") >= 0 ? "text-warning" : "text-success") +
+          '">' +
+          esc(row.status) +
+          "</p>"
+        : '<p class="small text-muted mb-0">Live status loading…</p>') +
+      '<a class="btn btn-sm btn-outline-primary mt-3" href="route-finder.html">Plan trip from here</a>';
+  }
+
+  function buildSvg(coords) {
     var ns = "http://www.w3.org/2000/svg";
     var svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", "0 0 480 440");
-    svg.setAttribute("class", "mp-map-svg");
+    svg.setAttribute("viewBox", "0 0 " + VB_W + " " + VB_H);
+    svg.setAttribute("class", "mp-map-svg w-100");
     svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", "Namma Metro schematic map with animated train");
+    svg.setAttribute("aria-label", "Namma Metro schematic with Purple, Green, and Yellow lines");
 
-    var defs = document.createElementNS(ns, "defs");
-    var grad = document.createElementNS(ns, "linearGradient");
-    grad.setAttribute("id", "mp-line-grad");
-    grad.setAttribute("x1", "0%");
-    grad.setAttribute("y1", "0%");
-    grad.setAttribute("x2", "100%");
-    grad.setAttribute("y2", "0%");
-    var s1 = document.createElementNS(ns, "stop");
-    s1.setAttribute("offset", "0%");
-    s1.setAttribute("stop-color", "#6F2DA8");
-    var s2 = document.createElementNS(ns, "stop");
-    s2.setAttribute("offset", "100%");
-    s2.setAttribute("stop-color", "#00A550");
-    grad.appendChild(s1);
-    grad.appendChild(s2);
-    defs.appendChild(grad);
-    svg.appendChild(defs);
+    var D = MetroProData;
+    var lineDefs = [
+      { key: "Purple", rows: D.LINES.purple },
+      { key: "Green", rows: D.LINES.green },
+      { key: "Yellow", rows: D.LINES.yellow },
+    ];
 
-    for (var i = 0; i < MAP_PATH.length; i++) {
-      var j = (i + 1) % MAP_PATH.length;
-      var line = document.createElementNS(ns, "line");
-      line.setAttribute("x1", MAP_PATH[i][0]);
-      line.setAttribute("y1", MAP_PATH[i][1]);
-      line.setAttribute("x2", MAP_PATH[j][0]);
-      line.setAttribute("y2", MAP_PATH[j][1]);
-      line.setAttribute("stroke", "url(#mp-line-grad)");
-      line.setAttribute("stroke-width", "8");
-      line.setAttribute("stroke-linecap", "round");
-      line.setAttribute("opacity", "0.35");
-      svg.appendChild(line);
-    }
+    lineDefs.forEach(function (ld) {
+      var pl = document.createElementNS(ns, "polyline");
+      pl.setAttribute("data-line", ld.key);
+      pl.setAttribute("fill", "none");
+      pl.setAttribute("stroke", LINE_COLORS[ld.key]);
+      pl.setAttribute("stroke-width", "6");
+      pl.setAttribute("stroke-linecap", "round");
+      pl.setAttribute("stroke-linejoin", "round");
+      pl.setAttribute("opacity", activeLine === "all" || activeLine === ld.key ? "0.55" : "0.12");
+      pl.setAttribute("points", polylinePoints(ld.rows, coords));
+      svg.appendChild(pl);
+    });
 
-    STOPS.forEach(function (s) {
+    D.STATIONS.forEach(function (st) {
+      var c = coords[st.id];
+      if (!c) return;
+      var tok = MetroProData.stationLineTokens(st);
+      var primary = tok[0] || "Purple";
+      if (activeLine !== "all" && tok.indexOf(activeLine) < 0) return;
+
       var g = document.createElementNS(ns, "g");
-      var c = document.createElementNS(ns, "circle");
-      c.setAttribute("cx", s.x);
-      c.setAttribute("cy", s.y);
-      c.setAttribute("r", "14");
-      c.setAttribute("fill", "var(--color-surface)");
-      c.setAttribute("stroke", "#6F2DA8");
-      c.setAttribute("stroke-width", "3");
-      var t = document.createElementNS(ns, "text");
-      t.setAttribute("x", s.x);
-      t.setAttribute("y", s.y + 5);
-      t.setAttribute("text-anchor", "middle");
-      t.setAttribute("font-size", "11");
-      t.setAttribute("font-weight", "700");
-      t.setAttribute("fill", "#6F2DA8");
-      t.textContent = s.label;
+      g.setAttribute("class", "mp-map-stop");
+      g.style.cursor = "pointer";
+      g.setAttribute("data-station-id", st.id);
+
+      var hit = document.createElementNS(ns, "circle");
+      hit.setAttribute("cx", c[0]);
+      hit.setAttribute("cy", c[1]);
+      hit.setAttribute("r", "12");
+      hit.setAttribute("fill", "transparent");
+
+      var dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", c[0]);
+      dot.setAttribute("cy", c[1]);
+      dot.setAttribute("r", tok.length > 1 ? "7" : "5");
+      dot.setAttribute("fill", "var(--color-surface)");
+      dot.setAttribute("stroke", LINE_COLORS[primary] || "#64748b");
+      dot.setAttribute("stroke-width", tok.length > 1 ? "3" : "2");
+
       var title = document.createElementNS(ns, "title");
-      title.textContent = s.title;
-      g.appendChild(c);
+      title.textContent = st.name + " (" + (st.code || "") + ")";
+
+      g.appendChild(hit);
+      g.appendChild(dot);
       g.appendChild(title);
-      g.appendChild(t);
+      g.addEventListener("click", function () {
+        showStationPanel(st);
+      });
       svg.appendChild(g);
     });
 
-    var train = document.createElementNS(ns, "circle");
-    train.setAttribute("r", "10");
-    train.setAttribute("fill", "#FBBF24");
-    train.setAttribute("stroke", "#0f172a");
-    train.setAttribute("stroke-width", "2");
-    train.setAttribute("class", "mp-train-dot");
-    svg.appendChild(train);
+    lineDefs.forEach(function (ld, idx) {
+      if (activeLine !== "all" && activeLine !== ld.key) return;
+      var rows = ld.rows;
+      if (rows.length < 2) return;
+      var mid = rows[Math.floor(rows.length / 2)];
+      var c = coords[mid[0]];
+      if (!c) return;
+      var train = document.createElementNS(ns, "circle");
+      train.setAttribute("r", "8");
+      train.setAttribute("fill", LINE_COLORS[ld.key]);
+      train.setAttribute("stroke", "#0f172a");
+      train.setAttribute("stroke-width", "2");
+      train.setAttribute("class", "mp-train-dot");
+      train.setAttribute("data-train-line", ld.key);
+      train.setAttribute("data-train-phase", String(idx * 0.33));
+      svg.appendChild(train);
+    });
 
-    return { svg: svg, train: train };
+    return svg;
   }
 
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
 
-  function animateTrain(trainEl, startTime) {
-    var path = MAP_PATH.concat([MAP_PATH[0]]);
-    var totalMs = 28000;
+  function animateTrains(svg, coords) {
+    var D = MetroProData;
+    var trains = svg.querySelectorAll("[data-train-line]");
+    var paths = {};
+    ["Purple", "Green", "Yellow"].forEach(function (name) {
+      var rows = D.LINES[name.toLowerCase()];
+      if (!rows) return;
+      paths[name] = [];
+      for (var i = 0; i < rows.length; i++) {
+        var c = coords[rows[i][0]];
+        if (c) paths[name].push(c);
+      }
+    });
+
     function frame(now) {
-      var t = ((now - startTime) % totalMs) / totalMs;
-      var segFloat = t * (path.length - 1);
-      var i = Math.floor(segFloat);
-      var local = segFloat - i;
-      var p0 = path[i];
-      var p1 = path[i + 1];
-      var x = lerp(p0[0], p1[0], local);
-      var y = lerp(p0[1], p1[1], local);
-      trainEl.setAttribute("cx", x);
-      trainEl.setAttribute("cy", y);
+      trains.forEach(function (train) {
+        var line = train.getAttribute("data-train-line");
+        var path = paths[line];
+        if (!path || path.length < 2) return;
+        var phase = parseFloat(train.getAttribute("data-train-phase") || "0");
+        var totalMs = line === "Purple" ? 36000 : line === "Green" ? 32000 : 28000;
+        var t = ((now / totalMs + phase) % 1);
+        var segFloat = t * (path.length - 1);
+        var i = Math.floor(segFloat);
+        var local = segFloat - i;
+        var p0 = path[i];
+        var p1 = path[i + 1] || path[i];
+        train.setAttribute("cx", lerp(p0[0], p1[0], local));
+        train.setAttribute("cy", lerp(p0[1], p1[1], local));
+      });
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
   }
 
-  function init() {
+  function renderMap() {
     var host = document.getElementById("mp-live-map-host");
-    if (!host) return;
-    var built = buildSvg();
-    host.appendChild(built.svg);
-    animateTrain(built.train, performance.now());
+    if (!host || !window.MetroProData) return;
+    var coords = buildCoords();
+    host.innerHTML = "";
+    var svg = buildSvg(coords);
+    host.appendChild(svg);
+    animateTrains(svg, coords);
+  }
+
+  function syncLineButtons() {
+    document.querySelectorAll("[data-mp-map-line]").forEach(function (btn) {
+      var v = btn.getAttribute("data-mp-map-line");
+      var on = v === activeLine;
+      btn.classList.toggle("btn-primary", on);
+      btn.classList.toggle("btn-outline-secondary", !on);
+    });
+  }
+
+  function initFilters() {
+    var wrap = document.getElementById("mp-map-line-filters");
+    if (!wrap || wrap.getAttribute("data-init") === "1") return;
+    wrap.setAttribute("data-init", "1");
+    wrap.querySelectorAll("[data-mp-map-line]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        activeLine = btn.getAttribute("data-mp-map-line") || "all";
+        syncLineButtons();
+        renderMap();
+      });
+    });
+    syncLineButtons();
+  }
+
+  function tickLive() {
+    var p =
+      window.MetroProDynamic && MetroProDynamic.ensureWeather
+        ? MetroProDynamic.ensureWeather().catch(function () {
+            return null;
+          })
+        : Promise.resolve(null);
+    p.finally(function () {
+      refreshStatusCache();
+      var stamp = document.getElementById("mp-map-updated");
+      if (stamp) stamp.textContent = "Status sync " + new Date().toLocaleTimeString();
+    });
+  }
+
+  function init() {
+    initFilters();
+    renderMap();
+    tickLive();
+    refreshTimer = setInterval(function () {
+      tickLive();
+    }, 12000);
+    window.addEventListener("resize", function () {
+      /* SVG scales via CSS */
+    });
   }
 
   if (document.readyState === "loading") {

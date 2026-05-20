@@ -99,9 +99,23 @@
     ["delta_electronics_bommasandra", "Delta Electronics Bommasandra", "BMSD"],
   ];
 
-  /** Simplified demo tariff (not official BMRCL slab fares). */
-  var FARE_BASE = 25;
-  var FARE_PER_KM = 8;
+  /**
+   * BMRCL-style distance slabs (indicative token fare, ₹).
+   * Source: published Namma Metro distance charts — verify on bmrc.co.in before production use.
+   */
+  var FARE_SLABS_KM = [
+    { maxKm: 2, token: 11 },
+    { maxKm: 4, token: 21 },
+    { maxKm: 6, token: 32 },
+    { maxKm: 8, token: 42 },
+    { maxKm: 10, token: 53 },
+    { maxKm: 15, token: 63 },
+    { maxKm: 20, token: 74 },
+    { maxKm: 25, token: 84 },
+    { maxKm: 30, token: 95 },
+    { maxKm: Infinity, token: 95 },
+  ];
+  var SMART_CARD_DISCOUNT = 0.05;
 
   var STATIONS = [];
   var stationIndex = {};
@@ -146,6 +160,33 @@
   }
 
   STATIONS = orderedStations();
+
+  /** UI order for Live Status grouping and filters (BMRCL lines in this demo). */
+  var LINE_ORDER = ["Purple", "Green", "Yellow"];
+
+  /** Line colours aligned with BMRCL-style branding (demo only). */
+  var LINE_STYLE = {
+    Purple: { hex: "#6F2DA8", label: "Purple Line" },
+    Green: { hex: "#00A650", label: "Green Line" },
+    Yellow: { hex: "#D4A017", label: "Yellow Line" },
+  };
+
+  function stationLineTokens(st) {
+    if (!st || !st.line) return [];
+    return st.line
+      .split(/\s*·\s*/)
+      .map(function (s) {
+        return s.trim();
+      })
+      .filter(Boolean);
+  }
+
+  /** Section heading for Live Status: interchange hubs vs single-line stations. */
+  function stationPrimarySection(st) {
+    var tok = stationLineTokens(st);
+    if (tok.length > 1) return "Interchange";
+    return tok[0] || "Other";
+  }
 
   var EDGES = {};
 
@@ -204,9 +245,35 @@
     return null;
   }
 
-  function computeFare(distanceKm) {
+  function fareDetailsFromDistance(distanceKm) {
     var d = Math.max(0, distanceKm);
-    return Math.round(FARE_BASE + d * FARE_PER_KM);
+    if (d <= 0) {
+      return { token: 0, smart: 0, slabLabel: "Same station", distanceKm: 0 };
+    }
+    for (var i = 0; i < FARE_SLABS_KM.length; i++) {
+      var slab = FARE_SLABS_KM[i];
+      if (d <= slab.maxKm) {
+        var token = slab.token;
+        var smart = Math.round(token * (1 - SMART_CARD_DISCOUNT));
+        var prevMax = i > 0 ? FARE_SLABS_KM[i - 1].maxKm : 0;
+        return {
+          token: token,
+          smart: smart,
+          slabLabel: prevMax + "–" + (slab.maxKm === Infinity ? "30+" : slab.maxKm) + " km",
+          distanceKm: Math.round(d * 10) / 10,
+        };
+      }
+    }
+    return { token: 95, smart: 90, slabLabel: "30+ km", distanceKm: Math.round(d * 10) / 10 };
+  }
+
+  /** Default fare shown in app: Namma Metro smart card (5% off token slab). */
+  function computeFare(distanceKm) {
+    return fareDetailsFromDistance(distanceKm).smart;
+  }
+
+  function computeFareToken(distanceKm) {
+    return fareDetailsFromDistance(distanceKm).token;
   }
 
   function liveStatusSnapshot() {
@@ -231,10 +298,16 @@
   window.MetroProData = {
     STATIONS: STATIONS,
     LINES: { purple: PURPLE_LINE, green: GREEN_LINE, yellow: YELLOW_LINE },
+    LINE_ORDER: LINE_ORDER,
+    LINE_STYLE: LINE_STYLE,
+    stationLineTokens: stationLineTokens,
+    stationPrimarySection: stationPrimarySection,
     findPath: findPath,
     computeFare: computeFare,
-    FARE_BASE: FARE_BASE,
-    FARE_PER_KM: FARE_PER_KM,
+    computeFareToken: computeFareToken,
+    fareDetailsFromDistance: fareDetailsFromDistance,
+    FARE_SLABS_KM: FARE_SLABS_KM,
+    SMART_CARD_DISCOUNT: SMART_CARD_DISCOUNT,
     liveStatusSnapshot: liveStatusSnapshot,
     estimateTripMinutes: estimateTripMinutes,
   };

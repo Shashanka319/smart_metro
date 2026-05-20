@@ -895,3 +895,33 @@ a:focus-visible {
   position: relative;
   z-index: 1;
 }
+
+/* Namma Metro line badges (Live Status) */
+.mp-map-host {
+  min-height: 420px;
+  max-height: min(72vh, 560px);
+}
+.mp-map-host .mp-map-svg {
+  max-height: min(72vh, 560px);
+  height: auto;
+}
+.mp-map-stop circle {
+  transition: stroke-width 0.15s ease;
+}
+.mp-map-stop:hover circle:nth-child(2) {
+  stroke-width: 4;
+}
+
+.mp-line-pill {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--mp-line, #64748b);
+  line-height: 1.2;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
