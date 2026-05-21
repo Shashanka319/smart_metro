@@ -16,12 +16,15 @@
       .map(function (name) {
         var meta = MetroProData.LINE_STYLE[name];
         var hex = (meta && meta.hex) || "#64748b";
+        var lineClass = "mp-line-pill--" + name.toLowerCase();
         return (
-          '<span class="mp-line-pill" style="--mp-line:' +
+          '<span class="mp-line-pill mp-line-pill--image ' +
+          lineClass +
+          '" style="--mp-line:' +
           hex +
-          '">' +
+          '"><span>' +
           esc(name) +
-          "</span>"
+          "</span></span>"
         );
       })
       .join(" ");

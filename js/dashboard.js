@@ -251,22 +251,15 @@
   }
 
   function stationCardHtml(station, line) {
-    var stationImage = 'assets/metro-photos/' + station.id + '.svg';
-    var fallback = 'https://source.unsplash.com/featured/640x360/?' + encodeURIComponent(station.name + ' bangalore metro');
     var tags = window.MetroProData && MetroProData.stationLineTokens ? MetroProData.stationLineTokens(station).join(' · ') : station.line;
     return (
       '<div class="col-lg-4 col-sm-6">' +
-      '<div class="mp-card mp-line-card h-100 p-0 overflow-hidden" style="border-top:4px solid ' + line.hex + ';">' +
-      '<div class="ratio ratio-16x9" style="background:' + line.hex + '20;">' +
-      '<img src="' + stationImage + '" onerror="this.onerror=null;this.src=\'' + fallback + '\'" alt="' + station.name + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;"/>' +
-      '</div>' +
-      '<div class="p-3">' +
+      '<div class="mp-card mp-line-card h-100 p-3" style="border-left:4px solid ' + line.hex + ';">' +
       '<h4 class="h6 mb-1">' + station.name + '</h4>' +
       '<p class="small text-muted mb-2">' + tags + '</p>' +
       '<div class="d-flex flex-wrap gap-2">' +
       '<a href="route-finder.html#route=' + encodeURIComponent(station.id) + ',baiyappanahalli" class="btn btn-sm btn-outline-primary">Plan from here</a>' +
       '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="alert(\'Nearby highlights for ' + station.name.replace(/'/g, "\\'") + '\')">Nearby</button>' +
-      '</div>' +
       '</div>' +
       '</div>' +
       '</div>'
@@ -318,13 +311,13 @@
       '<div class="row g-2 photo-grid">' +
       stations.concat(stations.slice(0, 3)).slice(0, 6).map(function (station) {
         var local = 'assets/metro-photos/' + station.id + '.svg';
-        var unsplash = 'https://source.unsplash.com/featured/400x260/?' + encodeURIComponent(station.name + ' metro');
+        var unsplash = '';
         return (
           '<div class="col-6 col-md-4">' +
-          '<div class="mp-photo-square rounded-3 overflow-hidden" style="background:' + line.hex + '10">' +
-          '<img src="' + local + '" onerror="this.onerror=null;this.src=\'' + unsplash + '\'" alt="' + station.name + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;"/>' +
+          '<div class="p-2 rounded-3" style="background:' + line.hex + '10; border-left:3px solid ' + line.hex + ';">' +
+          '<div class="fw-semibold">' + station.name + '</div>' +
+          '<div class="small text-muted">' + (window.MetroProData && MetroProData.stationLineTokens ? MetroProData.stationLineTokens(station).join(' · ') : station.line) + '</div>' +
           '</div>' +
-          '<div class="small mt-2 text-truncate">' + station.name + '</div>' +
           '</div>'
         );
       }).join("") +
@@ -339,7 +332,7 @@
     renderLineActions();
     renderTopDestinations();
     renderLineExplorer();
-    renderPhotoGallery();
+    // renderPhotoGallery(); // Removed - no images displayed
     renderJourneyStats();
   }
 

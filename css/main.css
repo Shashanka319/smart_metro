@@ -924,6 +924,48 @@ a:focus-visible {
   background: var(--mp-line, #64748b);
   line-height: 1.2;
   border: 1px solid rgba(0, 0, 0, 0.12);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+/* Image-based line pills with metro photos */
+.mp-line-pill.mp-line-pill--image {
+  padding: 0.3rem 0.6rem;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.mp-line-pill.mp-line-pill--image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+  z-index: 0;
+}
+
+.mp-line-pill.mp-line-pill--image span {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Purple Line - Elevated metro at sunset */
+.mp-line-pill--purple {
+  background-image: url('../assets/metro-photos/metro-elevated.jpg');
+}
+
+/* Green Line - Station with train */
+.mp-line-pill--green {
+  background-image: url('../assets/metro-photos/metro-station-1.jpg');
+}
+
+/* Yellow Line - Night metro */
+.mp-line-pill--yellow {
+  background-image: url('../assets/metro-photos/metro-night.jpg');
 }
 
 .line-pill {
@@ -1017,4 +1059,135 @@ a:focus-visible {
 .mp-card.line-action-panel,
 .mp-card.dash-live-strip {
   border-radius: 1.25rem;
+}
+
+/* Enhanced live status cards with metro imagery */
+.mp-live-status-section {
+  margin-bottom: var(--space-6);
+}
+
+.mp-live-status-section .mp-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.mp-live-status-section .mp-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--mp-line-color, var(--color-primary)), transparent);
+  opacity: 0.8;
+}
+
+/* Line-specific card backgrounds */
+.mp-live-status-section[data-section="Purple"] .mp-card {
+  --mp-line-color: #6F2DA8;
+}
+
+.mp-live-status-section[data-section="Green"] .mp-card {
+  --mp-line-color: #00A650;
+}
+
+.mp-live-status-section[data-section="Yellow"] .mp-card {
+  --mp-line-color: #D4A017;
+}
+
+.mp-live-status-section[data-section="Interchange"] .mp-card {
+  --mp-line-color: linear-gradient(90deg, #6F2DA8, #00A650, #D4A017);
+}
+
+/* Metro image overlay for section headers */
+.mp-live-status-section h2 {
+  position: relative;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.mp-live-status-section h2::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+.mp-live-status-section[data-section="Purple"] h2::before {
+  background-image: url('../assets/metro-photos/metro-elevated.jpg');
+}
+
+.mp-live-status-section[data-section="Green"] h2::before {
+  background-image: url('../assets/metro-photos/metro-station-1.jpg');
+}
+
+.mp-live-status-section[data-section="Yellow"] h2::before {
+  background-image: url('../assets/metro-photos/metro-night.jpg');
+}
+
+.mp-live-status-section[data-section="Interchange"] h2::before {
+  background-image: url('../assets/metro-photos/metro-train-1.jpg');
+}
+
+.mp-live-status-section h2 > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Line filter buttons with images */
+[data-mp-line-filter] {
+  position: relative;
+  overflow: hidden;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+[data-mp-line-filter].btn-primary {
+  background-size: cover;
+  background-position: center;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-mp-line-filter].btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+  z-index: 0;
+}
+
+[data-mp-line-filter].btn-primary span,
+[data-mp-line-filter].btn-primary {
+  position: relative;
+  z-index: 1;
+  color: #fff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+[data-mp-line-filter="Purple"].btn-primary {
+  background-image: url('../assets/metro-photos/metro-elevated.jpg');
+}
+
+[data-mp-line-filter="Green"].btn-primary {
+  background-image: url('../assets/metro-photos/metro-station-1.jpg');
+}
+
+[data-mp-line-filter="Yellow"].btn-primary {
+  background-image: url('../assets/metro-photos/metro-night.jpg');
+}
+
+[data-mp-line-filter="Interchange"].btn-primary {
+  background-image: url('../assets/metro-photos/metro-train-1.jpg');
+}
+
+[data-mp-line-filter="all"].btn-primary {
+  background-image: url('../assets/metro-photos/metro-underground.jpg');
 }
